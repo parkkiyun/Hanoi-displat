@@ -1,0 +1,129 @@
+.schedule-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.schedule-description {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.day-label {
+  min-width: 80px;
+  font-weight: bold;
+  color: #333;
+}
+
+.schedule-mode-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.schedule-mode-btn {
+  padding: 8px 16px;
+  border: 2px solid #6366F1;
+  background-color: transparent;
+  color: #6366F1;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.schedule-mode-btn:hover {
+  background-color: #6366F1;
+  color: white;
+}
+
+.schedule-mode-btn.active {
+  background-color: #6366F1;
+  color: white;
+  font-weight: bold;
+}
+
+.schedule-mode-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.time-inputs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.time-inputs label {
+  font-size: 14px;
+  color: #666;
+}
+
+.time-inputs input[type="time"] {
+  padding: 6px;
+  width: 120px;
+}
+
+.time-inputs input[type="time"]:disabled {
+  background-color: #f0f0f0;
+  color: #999;
+}
+
+.apply-button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.apply-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.schedule-info {
+  background-color: #f0f8ff;
+  padding: 20px;
+  border-radius: 6px;
+  border: 1px solid #cce7ff;
+}
+
+.schedule-info h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.schedule-info ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.schedule-info li {
+  margin-bottom: 5px;
+}
+
+.schedule-info p {
+  margin: 0;
+  color: #666;
+  font-style: italic;
+}

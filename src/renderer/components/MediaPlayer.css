@@ -1,0 +1,97 @@
+.media-player {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.media-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  width: auto;
+  height: auto;
+}
+
+.media-video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.media-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: white;
+  font-family: 'GyeonggiTitle', Arial, sans-serif;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4CAF50;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.media-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: white;
+  font-family: 'GyeonggiTitle', Arial, sans-serif;
+  text-align: center;
+}
+
+.media-error p {
+  margin: 10px 0;
+  font-size: 24px;
+}
+
+.media-error p:first-child {
+  font-size: 48px;
+}
+
+.media-error p:last-child {
+  font-size: 18px;
+  color: #ccc;
+}
+
+/* 페이드 전환 효과 */
+.media-player {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.media-player.fade-in {
+  opacity: 1;
+}
+
+.media-player.fade-out {
+  opacity: 0;
+}
+
+/* 이미지/비디오 프리로드를 위한 숨김 요소 */
+.preload-container {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}

@@ -1,0 +1,104 @@
+.App {
+  text-align: center;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* 카드 스타일 */
+.card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.card-header {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+/* 그룹박스 스타일 */
+.group-box {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.group-box-title {
+  font-weight: bold;
+  margin-bottom: 12px;
+  color: #555;
+}
+
+/* 버튼 그룹 */
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.button-primary {
+  background-color: #6366F1;
+  color: white;
+}
+
+.button-primary:hover {
+  background-color: #4F46E5;
+}
+
+.button-secondary {
+  background-color: #EF4444;
+  color: white;
+}
+
+.button-secondary:hover {
+  background-color: #DC2626;
+}
+
+.button-default {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+/* 상태 표시 */
+.status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status.active {
+  background-color: #10B981;
+  color: white;
+}
+
+.status.inactive {
+  background-color: #EF4444;
+  color: white;
+}
+
+/* 로딩 스피너 */
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #6366F1;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

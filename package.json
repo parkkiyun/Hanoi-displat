@@ -1,0 +1,105 @@
+{
+  "name": "hanol-display-electron",
+  "version": "1.0.0",
+  "description": "한올 디스플레이 - Digital Signage Application",
+  "main": "src/main/app.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "npm run react-build && FORCE_PROD=1 electron .",
+    "dev": "concurrently \"npm run react-dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "react-dev": "react-scripts start",
+    "react-build": "react-scripts build",
+    "build": "npm run react-build && electron-builder",
+    "build:win": "npm run react-build && electron-builder --win",
+    "build:mac": "npm run react-build && electron-builder --mac",
+    "build:linux": "npm run react-build && electron-builder --linux",
+    "build:windows": "node scripts/build-windows.js",
+    "generate-icons": "node scripts/generate-windows-icons.js",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "keywords": [
+    "electron",
+    "react",
+    "digital-signage"
+  ],
+  "author": "Hanol Display Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "concurrently": "^8.2.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "react-scripts": "5.0.1",
+    "sharp": "^0.34.2",
+    "typescript": "^4.9.5",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "axios": "^1.6.2",
+    "chokidar": "^3.5.3",
+    "electron-log": "^5.4.1",
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.6.2",
+    "node-cron": "^3.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0"
+  },
+  "build": {
+    "appId": "com.hanol.display",
+    "productName": "한올 디스플레이",
+    "copyright": "Copyright © 2024 Hanol Display Team",
+    "directories": {
+      "output": "dist"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "parkkiyun",
+      "repo": "Hanoi-displat"
+    },
+    "files": [
+      "build/**/*",
+      "src/main/**/*",
+      "node_modules/**/*",
+      "assets/**/*"
+    ],
+    "extraResources": [
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "requestedExecutionLevel": "asInvoker",
+      "publisherName": "Hanol Display Team"
+    },
+    "nsis": {
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "shortcutName": "한올 디스플레이"
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

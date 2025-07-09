@@ -1,0 +1,109 @@
+.control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.control-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.control-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.control-item label {
+  min-width: 100px;
+}
+
+.display-select {
+  flex: 1;
+  padding: 8px;
+}
+
+.control-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.control-buttons button {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 6px;
+}
+
+.control-buttons .btn-primary {
+  background: #6366F1;
+  color: white;
+  border: none;
+}
+
+.control-buttons .btn-primary:hover {
+  background: #4F46E5;
+}
+
+.control-buttons .btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.control-buttons .btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.status-bar {
+  text-align: center;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.path-input-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.path-input-group label {
+  min-width: 50px;
+}
+
+.path-input {
+  flex: 1;
+  padding: 8px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setting-item label {
+  min-width: 150px;
+}
+
+.setting-item input[type="number"] {
+  width: 80px;
+}
+
+.setting-item input[type="range"] {
+  flex: 1;
+  accent-color: #6366F1;
+}

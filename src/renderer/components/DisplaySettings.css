@@ -1,0 +1,41 @@
+.display-settings {
+  padding: 20px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  max-width: 600px;
+}
+
+.setting-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setting-item label {
+  font-weight: bold;
+  color: #333;
+  font-size: 14px;
+}
+
+.setting-item input[type="number"] {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100px;
+}
+
+.setting-item input[type="range"] {
+  width: 200px;
+  accent-color: #6366F1;
+}
+
+.setting-item span {
+  font-weight: bold;
+  color: #6366F1;
+  font-size: 14px;
+}
