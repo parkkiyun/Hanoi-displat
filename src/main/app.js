@@ -10,8 +10,18 @@ const { setupTray } = require('./tray');
 const { setupUpdater } = require('./updater');
 
 // 싱글톤 인스턴스 보장
-if (!app.requestSingleInstanceLock()) {
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
   app.quit();
+} else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    // 다른 인스턴스가 실행되려고 할 때 기존 창을 복원
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
 }
 
 
@@ -93,12 +103,18 @@ function createMainWindow() {
     mainWindow = null;
   });
 
-  // 창 닫기 시 숨기기 (트레이로)
+  // 창 닫기 시 앱 완전 종료
   mainWindow.on('close', (event) => {
-    if (!app.isQuitting) {
-      event.preventDefault();
-      mainWindow.hide();
+    // 트레이로 숨기지 않고 완전 종료
+    app.isQuitting = true;
+    
+    // 디스플레이 윈도우가 있으면 닫기
+    if (displayWindow) {
+      displayWindow.close();
     }
+    
+    // 앱 종료
+    app.quit();
   });
 }
 
@@ -113,9 +129,10 @@ function createDisplayWindow() {
     y: targetDisplay.bounds.y,
     width: targetDisplay.bounds.width,
     height: targetDisplay.bounds.height,
-    fullscreen: true,
+    fullscreen: false,  // 전체화면 모드 비활성화
     frame: false,
     alwaysOnTop: true,
+    show: false,  // 초기에 숨김
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -143,7 +160,7 @@ function createDisplayWindow() {
     displayWindow.loadFile(buildPath, { hash: '/slideshow' });
   }
 
-  // 창이 로드된 후 파일 목록 전송
+  // 창이 로드된 후 파일 목록 전송 및 표시
   displayWindow.webContents.once('did-finish-load', async () => {
     console.log('디스플레이 윈도우 로드 완료 - 파일 목록 전송');
     
@@ -159,6 +176,14 @@ function createDisplayWindow() {
     } catch (error) {
       console.error('파일 목록 전송 실패:', error);
     }
+    
+    // 로드 완료 후 창 표시 (전체화면으로 만들기 전에)
+    displayWindow.show();
+    
+    // 잠깐 대기 후 전체화면으로 전환
+    setTimeout(() => {
+      displayWindow.setFullScreen(true);
+    }, 500);
   });
 
   displayWindow.on('closed', () => {
@@ -510,6 +535,11 @@ function setupIPC() {
 // 디스플레이 윈도우 닫기
 function closeDisplayWindow() {
   if (displayWindow) {
+    // 전체화면 모드 해제 후 창 닫기
+    if (displayWindow.isFullScreen()) {
+      displayWindow.setFullScreen(false);
+    }
+    
     displayWindow.close();
     displayWindow = null;
     
@@ -529,8 +559,8 @@ app.whenReady().then(() => {
   initializeSettings();
   createMainWindow();
   
-  // 트레이 설정
-  tray = setupTray(mainWindow, app);
+  // 트레이 설정 비활성화 (완전 종료를 위해)
+  // tray = setupTray(mainWindow, app);
   
   // IPC 통신 설정
   setupIPC();
@@ -552,9 +582,9 @@ app.whenReady().then(() => {
 
 // 모든 창이 닫혔을 때
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+  // macOS에서도 완전 종료되도록 수정
+  console.log('모든 창이 닫힘 - 앱 종료');
+  app.quit();
 });
 
 // 앱 활성화 시
@@ -568,7 +598,28 @@ app.on('activate', () => {
 
 // 종료 전 정리
 app.on('before-quit', () => {
+  console.log('앱 종료 전 정리 시작');
   app.isQuitting = true;
+  
+  // 디스플레이 윈도우 정리
+  if (displayWindow) {
+    if (displayWindow.isFullScreen()) {
+      displayWindow.setFullScreen(false);
+    }
+    displayWindow.close();
+    displayWindow = null;
+  }
+  
+  // 메인 윈도우 정리
+  if (mainWindow) {
+    mainWindow.close();
+    mainWindow = null;
+  }
+  
+  // 모든 타이머 정리
+  setTimeout(() => {
+    process.exit(0);
+  }, 1000);
 });
 
 // Django 연동 - 캐시 디렉토리 경로

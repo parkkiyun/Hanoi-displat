@@ -108,7 +108,7 @@ function setupUpdater(window) {
 
   ipcMain.handle('get-app-version', () => {
     return {
-      version: require('../../package.json').version,
+      version: require('../../../package.json').version,
       electronVersion: process.versions.electron,
       nodeVersion: process.versions.node
     };

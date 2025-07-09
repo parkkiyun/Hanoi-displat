@@ -167,12 +167,17 @@ function SlideShow() {
 
   const nextSlide = () => {
     if (files.length === 0) return;
-    setCurrentIndex((prevIndex) => {
-      const newIndex = (prevIndex + 1) % files.length;
-      // 다음 다음 파일 인덱스 계산
-      setNextIndex((newIndex + 1) % files.length);
-      return newIndex;
-    });
+    
+    try {
+      setCurrentIndex((prevIndex) => {
+        const newIndex = (prevIndex + 1) % files.length;
+        // 다음 다음 파일 인덱스 계산
+        setNextIndex((newIndex + 1) % files.length);
+        return newIndex;
+      });
+    } catch (error) {
+      console.error('SlideShow - nextSlide 오류:', error);
+    }
   };
 
   const prevSlide = () => {
@@ -208,21 +213,42 @@ function SlideShow() {
   };
 
   const startSlideShow = () => {
+    // 기존 타이머 정리
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
 
-    if (files.length === 0) return;
+    if (files.length === 0 || !settings) {
+      console.log('SlideShow - 파일이 없거나 설정이 없음');
+      return;
+    }
 
     const duration = settings?.display?.imageDuration || 5000;
     
-    intervalRef.current = setInterval(() => {
-      if (isPlaying && !isVideoPlaying) {
-        nextSlide();
-      }
-    }, duration);
-    
-    console.log(`슬라이드쇼 시작됨 - ${files.length}개 파일, ${duration}ms 간격`);
+    try {
+      intervalRef.current = setInterval(() => {
+        try {
+          if (isPlaying && !isVideoPlaying && files.length > 0) {
+            nextSlide();
+          }
+        } catch (error) {
+          console.error('SlideShow - 타이머 콜백 오류:', error);
+          // 오류 발생 시 타이머 재시작
+          setTimeout(() => {
+            startSlideShow();
+          }, 1000);
+        }
+      }, duration);
+      
+      console.log(`슬라이드쇼 시작됨 - ${files.length}개 파일, ${duration}ms 간격`);
+    } catch (error) {
+      console.error('SlideShow - 타이머 설정 오류:', error);
+      // 오류 발생 시 1초 후 재시도
+      setTimeout(() => {
+        startSlideShow();
+      }, 1000);
+    }
   };
 
   const getCurrentFile = () => {

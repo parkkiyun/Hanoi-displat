@@ -1,14 +1,15 @@
 {
   "name": "hanol-display-electron",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "한올 디스플레이 - Digital Signage Application",
-  "main": "src/main/app.js",
+  "main": "public/electron.js",
   "homepage": "./",
   "scripts": {
     "start": "npm run react-build && FORCE_PROD=1 electron .",
     "dev": "concurrently \"npm run react-dev\" \"wait-on http://localhost:3000 && electron .\"",
     "react-dev": "react-scripts start",
-    "react-build": "react-scripts build",
+    "react-build": "react-scripts build && npm run copy-main-files",
+    "copy-main-files": "cp -r src/main/* build/ && cp -r public/main/* build/",
     "build": "npm run react-build && electron-builder",
     "build:win": "npm run react-build && electron-builder --win",
     "build:mac": "npm run react-build && electron-builder --mac",
