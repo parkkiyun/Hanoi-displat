@@ -51,10 +51,16 @@ const UpdateStatus = () => {
 
   const checkForUpdates = async () => {
     try {
+      console.log('업데이트 확인 버튼 클릭');
+      setUpdateStatus({ event: 'checking-for-update' });
+      setIsVisible(true);
+      
       const result = await window.electronAPI.checkForUpdates();
       console.log('업데이트 확인 결과:', result);
     } catch (error) {
       console.error('업데이트 확인 실패:', error);
+      setUpdateStatus({ event: 'update-error', data: error });
+      setIsVisible(true);
     }
   };
 

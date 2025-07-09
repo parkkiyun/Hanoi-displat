@@ -131,10 +131,14 @@ function sendUpdateMessage(event, data = null) {
 function checkForUpdates() {
   if (process.env.NODE_ENV === 'development') {
     log.info('개발 모드에서는 업데이트 확인을 건너뜁니다.');
-    return;
+    // 개발 모드에서도 테스트를 위해 메시지 전송
+    sendUpdateMessage('update-not-available', { message: '개발 모드에서는 업데이트를 확인할 수 없습니다.' });
+    return { message: '개발 모드에서는 업데이트를 확인할 수 없습니다.' };
   }
   
+  log.info('수동 업데이트 확인 시작');
   autoUpdater.checkForUpdatesAndNotify();
+  return { message: '업데이트를 확인하고 있습니다.' };
 }
 
 module.exports = {

@@ -478,6 +478,32 @@ function setupIPC() {
     return getSchedulerStatus();
   });
   
+  // 업데이트 관련 IPC 핸들러들 추가
+  ipcMain.handle('check-for-updates', () => {
+    const { checkForUpdates } = require('./updater');
+    return checkForUpdates();
+  });
+
+  ipcMain.handle('download-update', () => {
+    const { autoUpdater } = require('electron-updater');
+    autoUpdater.downloadUpdate();
+    return { message: '업데이트 다운로드를 시작합니다.' };
+  });
+
+  ipcMain.handle('install-update', () => {
+    const { autoUpdater } = require('electron-updater');
+    autoUpdater.quitAndInstall();
+    return { message: '업데이트를 설치하고 재시작합니다.' };
+  });
+
+  ipcMain.handle('get-app-version', () => {
+    return {
+      version: require('../../package.json').version,
+      electronVersion: process.versions.electron,
+      nodeVersion: process.versions.node
+    };
+  });
+  
   console.log('setupIPC 함수 완료 - 모든 IPC 핸들러 등록됨');
 }
 
