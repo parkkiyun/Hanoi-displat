@@ -9,6 +9,16 @@ const { setupFileWatcher } = require('./fileWatcher');
 const { setupTray } = require('./tray');
 const { setupUpdater } = require('./main/updater');
 
+// 캐시 디렉토리 설정 (캐시 오류 해결)
+const os = require('os');
+const userDataPath = path.join(os.homedir(), 'AppData', 'Local', 'hanol-display-electron');
+try {
+  app.setPath('userData', userDataPath);
+  app.setPath('cache', path.join(userDataPath, 'cache'));
+} catch (error) {
+  console.log('캐시 디렉토리 설정 실패:', error.message);
+}
+
 // 싱글톤 인스턴스 보장
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -29,7 +39,82 @@ if (!gotTheLock) {
 let mainWindow;
 let tray;
 let displayWindow;
+let slideshowState = 'stopped'; // 'stopped', 'running', 'scheduled'
+let startedBy = 'manual'; // 'manual', 'schedule'
 const store = new Store();
+
+// 중앙 집중식 슬라이드쇼 제어 시스템
+const SlideshowController = {
+  start: function(source = 'manual') {
+    console.log(`[SlideShow Controller] 시작 요청 - 소스: ${source}`);
+    
+    if (displayWindow) {
+      console.log('[SlideShow Controller] 이미 실행 중이므로 건너뜀');
+      return true;
+    }
+    
+    createDisplayWindow();
+    slideshowState = 'running';
+    startedBy = source;
+    
+    // 상태 업데이트 전송
+    this.broadcastStatus('started');
+    
+    console.log(`[SlideShow Controller] 시작 완료 - 상태: ${slideshowState}, 시작자: ${startedBy}`);
+    return true;
+  },
+  
+  stop: function(source = 'manual') {
+    console.log(`[SlideShow Controller] 중지 요청 - 소스: ${source}`);
+    
+    if (!displayWindow) {
+      console.log('[SlideShow Controller] 실행 중이 아니므로 건너뜀');
+      return true;
+    }
+    
+    closeDisplayWindow();
+    slideshowState = 'stopped';
+    startedBy = 'manual';
+    
+    // 상태 업데이트 전송
+    this.broadcastStatus('stopped');
+    
+    console.log(`[SlideShow Controller] 중지 완료 - 상태: ${slideshowState}`);
+    return true;
+  },
+  
+  getStatus: function() {
+    return {
+      state: slideshowState,
+      startedBy: startedBy,
+      isRunning: !!displayWindow
+    };
+  },
+  
+  broadcastStatus: function(status) {
+    console.log(`[SlideShow Controller] 상태 전송: ${status}`);
+    
+    // 메인 윈도우에 상태 전송 (지연 처리 포함)
+    const sendStatus = () => {
+      if (mainWindow && mainWindow.webContents && !mainWindow.webContents.isLoading()) {
+        mainWindow.webContents.send('slideshow-status', status);
+        console.log(`[SlideShow Controller] 상태 전송 완료: ${status}`);
+      } else {
+        console.log(`[SlideShow Controller] 메인 윈도우 준비 안됨, 500ms 후 재시도`);
+        setTimeout(sendStatus, 500);
+      }
+    };
+    
+    sendStatus();
+    
+    // IPC 이벤트 방출
+    if (status === 'started') {
+      ipcMain.emit('slideshow-started');
+    } else if (status === 'stopped') {
+      ipcMain.emit('slideshow-stopped');
+    }
+  }
+};
 
 // 기본 설정값
 const defaultSettings = {
@@ -49,7 +134,7 @@ const defaultSettings = {
     fontSize: 40
   },
   watchDir: process.platform === 'win32' 
-    ? 'G:\\내 드라이브\\Screen editor' 
+    ? path.join(require('os').homedir(), 'Documents', 'HanolDisplay', 'media')
     : '/Users/kiyun/Documents/coding/screen editor hanolDisplay/hanol-display-electron/media_cache'
 };
 
@@ -98,6 +183,17 @@ function createMainWindow() {
     // 프로덕션 모드에서는 개발자 도구를 열지 않음
     // 필요시 Ctrl+Shift+I 또는 F12로 수동 열기 가능
   }
+
+  // 메인 윈도우 로드 완료 후 현재 상태 전송
+  mainWindow.webContents.once('did-finish-load', () => {
+    console.log('메인 윈도우 로드 완료 - 현재 상태 전송');
+    const status = SlideshowController.getStatus();
+    if (status.isRunning) {
+      SlideshowController.broadcastStatus('started');
+    } else {
+      SlideshowController.broadcastStatus('stopped');
+    }
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -188,21 +284,8 @@ function createDisplayWindow() {
 
   displayWindow.on('closed', () => {
     displayWindow = null;
-    
-    // 디스플레이 윈도우가 닫힐 때 메인 윈도우에 상태 전송
-    if (mainWindow) {
-      mainWindow.webContents.send('slideshow-status', 'stopped');
-    }
-    
-    console.log('디스플레이 윈도우 닫힘 - 상태 업데이트 전송');
+    console.log('디스플레이 윈도우 닫힘');
   });
-
-  // 디스플레이 윈도우 상태 업데이트
-  if (mainWindow) {
-    mainWindow.webContents.send('slideshow-status', 'started');
-  }
-  
-  ipcMain.emit('slideshow-started');
 }
 
 // IPC 통신 설정
@@ -251,7 +334,10 @@ function setupIPC() {
       
       store.set('settings', settings);
       // 스케줄러 재시작
-      setupScheduler(store, { createDisplayWindow, closeDisplayWindow });
+      setupScheduler(store, { 
+        startSlideshow: () => SlideshowController.start('schedule'),
+        stopSlideshow: () => SlideshowController.stop('schedule')
+      });
       return true;
     } catch (error) {
       console.error('설정 저장 실패:', error.message);
@@ -261,22 +347,16 @@ function setupIPC() {
 
   // 슬라이드쇼 제어
   ipcMain.handle('start-slideshow', () => {
-    if (!displayWindow) {
-      createDisplayWindow();
-    }
-    
-    // 메인 윈도우에 슬라이드쇼 시작 상태 전송
-    if (mainWindow) {
-      mainWindow.webContents.send('slideshow-status', 'started');
-    }
-    
-    console.log('슬라이드쇼 시작 - 상태 업데이트 전송');
-    return true;
+    return SlideshowController.start();
   });
 
   ipcMain.handle('stop-slideshow', () => {
-    closeDisplayWindow();
-    return true;
+    return SlideshowController.stop();
+  });
+
+  // 슬라이드쇼 상태 확인
+  ipcMain.handle('get-slideshow-status', () => {
+    return SlideshowController.getStatus();
   });
 
   // 디스플레이 목록
@@ -503,31 +583,7 @@ function setupIPC() {
     return getSchedulerStatus();
   });
   
-  // 업데이트 관련 IPC 핸들러들 추가
-  ipcMain.handle('check-for-updates', () => {
-    const { checkForUpdates } = require('./main/updater');
-    return checkForUpdates();
-  });
-
-  ipcMain.handle('download-update', () => {
-    const { autoUpdater } = require('electron-updater');
-    autoUpdater.downloadUpdate();
-    return { message: '업데이트 다운로드를 시작합니다.' };
-  });
-
-  ipcMain.handle('install-update', () => {
-    const { autoUpdater } = require('electron-updater');
-    autoUpdater.quitAndInstall();
-    return { message: '업데이트를 설치하고 재시작합니다.' };
-  });
-
-  ipcMain.handle('get-app-version', () => {
-    return {
-      version: require('../package.json').version,
-      electronVersion: process.versions.electron,
-      nodeVersion: process.versions.node
-    };
-  });
+  // 업데이트 관련 IPC 핸들러들은 setupUpdater에서 처리됨
   
   console.log('setupIPC 함수 완료 - 모든 IPC 핸들러 등록됨');
 }
@@ -543,13 +599,7 @@ function closeDisplayWindow() {
     displayWindow.close();
     displayWindow = null;
     
-    // 메인 윈도우에 슬라이드쇼 중지 상태 전송
-    if (mainWindow) {
-      mainWindow.webContents.send('slideshow-status', 'stopped');
-    }
-    
-    ipcMain.emit('slideshow-stopped');
-    console.log('슬라이드쇼 중지 - 상태 업데이트 전송');
+    console.log('디스플레이 윈도우 닫기 완료');
   }
 }
 
@@ -569,7 +619,10 @@ app.whenReady().then(() => {
   setupUpdater(mainWindow);
   
   // 스케줄러 설정
-  setupScheduler(store, { createDisplayWindow, closeDisplayWindow });
+  setupScheduler(store, { 
+    startSlideshow: () => SlideshowController.start('schedule'),
+    stopSlideshow: () => SlideshowController.stop('schedule')
+  });
   
   // 파일 감시자 설정
   const settings = store.get('settings');
@@ -601,6 +654,14 @@ app.on('before-quit', () => {
   console.log('앱 종료 전 정리 시작');
   app.isQuitting = true;
   
+  // 스케줄러 정리
+  try {
+    const { clearAllSchedules } = require('./scheduler');
+    clearAllSchedules();
+  } catch (error) {
+    console.error('스케줄러 정리 오류:', error);
+  }
+  
   // 디스플레이 윈도우 정리
   if (displayWindow) {
     if (displayWindow.isFullScreen()) {
@@ -616,10 +677,7 @@ app.on('before-quit', () => {
     mainWindow = null;
   }
   
-  // 모든 타이머 정리
-  setTimeout(() => {
-    process.exit(0);
-  }, 1000);
+  console.log('앱 종료 전 정리 완료');
 });
 
 // Django 연동 - 캐시 디렉토리 경로

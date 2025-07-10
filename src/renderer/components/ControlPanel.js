@@ -9,6 +9,7 @@ function ControlPanel({ settings, onSettingsChange }) {
   useEffect(() => {
     loadDisplays();
     setupEventListeners();
+    checkInitialSlideshowStatus();
   }, []);
 
   useEffect(() => {
@@ -41,8 +42,24 @@ function ControlPanel({ settings, onSettingsChange }) {
     // 트레이에서 슬라이드쇼 제어 시 이벤트
     if (window.electronAPI.onSlideshowStatusChanged) {
       window.electronAPI.onSlideshowStatusChanged((status) => {
+        console.log('[ControlPanel] 슬라이드쇼 상태 변경:', status);
         setIsSlideShowRunning(status === 'started');
       });
+    }
+  };
+
+  const checkInitialSlideshowStatus = async () => {
+    try {
+      if (!window.electronAPI || !window.electronAPI.getSlideshowStatus) {
+        console.warn('getSlideshowStatus API가 사용할 수 없습니다.');
+        return;
+      }
+      
+      const status = await window.electronAPI.getSlideshowStatus();
+      console.log('[ControlPanel] 초기 슬라이드쇼 상태:', status);
+      setIsSlideShowRunning(status.isRunning);
+    } catch (error) {
+      console.error('초기 슬라이드쇼 상태 확인 실패:', error);
     }
   };
 

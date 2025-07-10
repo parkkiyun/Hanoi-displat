@@ -38,7 +38,7 @@ const defaultSettings = {
     fontSize: 40
   },
   watchDir: process.platform === 'win32' 
-    ? 'G:\\내 드라이브\\Screen editor' 
+    ? path.join(require('os').homedir(), 'Documents', 'HanolDisplay', 'media')
     : '/Users/kiyun/Documents/coding/screen editor hanolDisplay/hanol-display-electron/media_cache'
 };
 

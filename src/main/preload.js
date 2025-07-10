@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 슬라이드쇼 제어
   startSlideshow: () => ipcRenderer.invoke('start-slideshow'),
   stopSlideshow: () => ipcRenderer.invoke('stop-slideshow'),
+  getSlideshowStatus: () => ipcRenderer.invoke('get-slideshow-status'),
   
   // 디스플레이 정보
   getDisplays: () => ipcRenderer.invoke('get-displays'),

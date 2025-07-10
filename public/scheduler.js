@@ -2,7 +2,7 @@ const cron = require('node-cron');
 
 let scheduledTasks = [];
 
-function setupScheduler(store, { createDisplayWindow, closeDisplayWindow }) {
+function setupScheduler(store, { startSlideshow, stopSlideshow }) {
   // 기존 스케줄 모두 중지
   clearAllSchedules();
 
@@ -31,14 +31,14 @@ function setupScheduler(store, { createDisplayWindow, closeDisplayWindow }) {
     const startCron = `${startMinute} ${startHour} * * ${dayNumber}`;
     const startTask = cron.schedule(startCron, () => {
       console.log(`[스케줄러] ${day}요일 슬라이드쇼 시작`);
-      createDisplayWindow();
+      startSlideshow();
     });
 
     // 종료 스케줄
     const endCron = `${endMinute} ${endHour} * * ${dayNumber}`;
     const endTask = cron.schedule(endCron, () => {
       console.log(`[스케줄러] ${day}요일 슬라이드쇼 종료`);
-      closeDisplayWindow();
+      stopSlideshow();
     });
 
     scheduledTasks.push(startTask, endTask);
@@ -47,10 +47,10 @@ function setupScheduler(store, { createDisplayWindow, closeDisplayWindow }) {
   });
 
   // 현재 시간 확인하여 실행 중이어야 하는지 확인
-  checkCurrentSchedule(schedules, createDisplayWindow);
+  checkCurrentSchedule(schedules, startSlideshow);
 }
 
-function checkCurrentSchedule(schedules, createDisplayWindow) {
+function checkCurrentSchedule(schedules, startSlideshow) {
   const now = new Date();
   const currentDay = ['일', '월', '화', '수', '목', '금', '토'][now.getDay()];
   const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -60,7 +60,7 @@ function checkCurrentSchedule(schedules, createDisplayWindow) {
   if (todaySchedule && todaySchedule.enabled) {
     if (currentTime >= todaySchedule.start && currentTime < todaySchedule.end) {
       console.log(`[스케줄러] 현재 시간이 ${currentDay}요일 스케줄 시간대입니다. 슬라이드쇼를 시작합니다.`);
-      setTimeout(() => createDisplayWindow(), 1000);
+      setTimeout(() => startSlideshow(), 1000);
     }
   }
 }

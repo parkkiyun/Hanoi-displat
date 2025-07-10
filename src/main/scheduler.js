@@ -1,8 +1,10 @@
 const cron = require('node-cron');
+const { ipcMain } = require('electron');
 
 let scheduledTasks = [];
 
-function setupScheduler(store, { createDisplayWindow, closeDisplayWindow }) {
+function setupScheduler(store, { startSlideshow, stopSlideshow }) {
+  console.log('[스케줄러] setupScheduler 호출됨');
   // 기존 스케줄 모두 중지
   clearAllSchedules();
 
@@ -30,15 +32,15 @@ function setupScheduler(store, { createDisplayWindow, closeDisplayWindow }) {
     // 시작 스케줄
     const startCron = `${startMinute} ${startHour} * * ${dayNumber}`;
     const startTask = cron.schedule(startCron, () => {
-      console.log(`[스케줄러] ${day}요일 슬라이드쇼 시작`);
-      createDisplayWindow();
+      console.log(`[스케줄러] CRON 트리거: ${startCron} - ${day}요일 슬라이드쇼 시작 요청`);
+      startSlideshow();
     });
 
     // 종료 스케줄
     const endCron = `${endMinute} ${endHour} * * ${dayNumber}`;
     const endTask = cron.schedule(endCron, () => {
-      console.log(`[스케줄러] ${day}요일 슬라이드쇼 종료`);
-      closeDisplayWindow();
+      console.log(`[스케줄러] CRON 트리거: ${endCron} - ${day}요일 슬라이드쇼 종료 요청`);
+      stopSlideshow();
     });
 
     scheduledTasks.push(startTask, endTask);
@@ -47,25 +49,39 @@ function setupScheduler(store, { createDisplayWindow, closeDisplayWindow }) {
   });
 
   // 현재 시간 확인하여 실행 중이어야 하는지 확인
-  checkCurrentSchedule(schedules, createDisplayWindow);
+  checkCurrentSchedule(schedules, startSlideshow);
 }
 
-function checkCurrentSchedule(schedules, createDisplayWindow) {
+// HH:MM 문자열을 분 단위 숫자로 변환
+function timeToMinutes(timeStr) {
+  const [hour, minute] = timeStr.split(':').map(Number);
+  return hour * 60 + minute;
+}
+
+function checkCurrentSchedule(schedules, startSlideshow) {
   const now = new Date();
   const currentDay = ['일', '월', '화', '수', '목', '금', '토'][now.getDay()];
-  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const currentMinutes = timeToMinutes(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
 
   const todaySchedule = schedules[currentDay];
   
   if (todaySchedule && todaySchedule.enabled) {
-    if (currentTime >= todaySchedule.start && currentTime < todaySchedule.end) {
+    const startMinutes = timeToMinutes(todaySchedule.start);
+    const endMinutes = timeToMinutes(todaySchedule.end);
+
+    if (currentMinutes >= startMinutes && currentMinutes < endMinutes) {
       console.log(`[스케줄러] 현재 시간이 ${currentDay}요일 스케줄 시간대입니다. 슬라이드쇼를 시작합니다.`);
-      setTimeout(() => createDisplayWindow(), 1000);
+      setTimeout(() => startSlideshow(), 1000);
+    } else {
+      console.log(`[스케줄러] 현재 시간(${currentMinutes}분)이 ${currentDay}요일 스케줄 시간대(${startMinutes}~${endMinutes}분)가 아닙니다.`);
     }
+  } else {
+    console.log(`[스케줄러] ${currentDay}요일 스케줄이 없거나 비활성화되어 있습니다.`);
   }
 }
 
 function clearAllSchedules() {
+  console.log('[스케줄러] clearAllSchedules 호출됨');
   scheduledTasks.forEach(task => {
     task.stop();
   });
@@ -95,12 +111,14 @@ function getSchedulerStatus() {
 function isInScheduleTime(schedules) {
   const now = new Date();
   const currentDay = ['일', '월', '화', '수', '목', '금', '토'][now.getDay()];
-  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const currentMinutes = timeToMinutes(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
 
   const todaySchedule = schedules[currentDay];
   
   if (todaySchedule && todaySchedule.enabled) {
-    return currentTime >= todaySchedule.start && currentTime < todaySchedule.end;
+    const startMinutes = timeToMinutes(todaySchedule.start);
+    const endMinutes = timeToMinutes(todaySchedule.end);
+    return currentMinutes >= startMinutes && currentMinutes < endMinutes;
   }
   
   return false;

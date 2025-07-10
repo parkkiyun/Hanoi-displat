@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 슬라이드쇼 제어
   startSlideshow: () => ipcRenderer.invoke('start-slideshow'),
   stopSlideshow: () => ipcRenderer.invoke('stop-slideshow'),
+  getSlideshowStatus: () => ipcRenderer.invoke('get-slideshow-status'),
   
   // 디스플레이 정보
   getDisplays: () => ipcRenderer.invoke('get-displays'),
@@ -37,5 +38,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   
   // 스케줄러 상태 확인
-  getSchedulerStatus: () => ipcRenderer.invoke('get-scheduler-status')
+  getSchedulerStatus: () => ipcRenderer.invoke('get-scheduler-status'),
+  
+  // 업데이트 관련
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  downloadUpdate: () => ipcRenderer.invoke('download-update'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  onUpdateMessage: (callback) => {
+    ipcRenderer.on('update-message', (event, data) => callback(data));
+  }
 });
